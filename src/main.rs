@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use rayon::prelude::*;
 
-const CHUNK_SIZE: usize = 8 * 1024 * 1024; // 8 MB
+const BUFFER_SIZE: usize = 8 * 1024 * 1024; // 8 MB
 
 fn get_files_in_directory(path: PathBuf) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
@@ -34,7 +34,7 @@ fn get_files_to_combine(paths: Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
 
 fn combine_files(files: &[PathBuf], output_file: &mut BufWriter<File>) -> io::Result<()> {
     for file in files {
-        let mut input_file = BufReader::with_capacity(CHUNK_SIZE, File::open(file)?);
+        let mut input_file = BufReader::with_capacity(BUFFER_SIZE, File::open(file)?);
         io::copy(&mut input_file, output_file)?;
     }
     Ok(())
@@ -46,7 +46,7 @@ fn main() -> io::Result<()> {
     println!("combining {} files", files_to_combine.len());
 
     let output_file_path = Path::new("combined.txt");
-    let output_file = BufWriter::with_capacity(CHUNK_SIZE, OpenOptions::new()
+    let output_file = BufWriter::with_capacity(BUFFER_SIZE, OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
